@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inequality Master</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            min-height: 100vh;
+        }
+        .math-font {
+            font-family: 'Courier New', Courier, monospace;
+            letter-spacing: 1px;
+        }
+        
+        /* Custom animations for transitions */
+        .fade-in {
+            animation: fadeIn 0.4s ease-in forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <div class="max-w-lg w-full bg-white rounded-2xl shadow-xl overflow-hidden relative border border-indigo-100">
+        
+        <!-- ================= START SCREEN ================= -->
+        <div id="start-screen" class="p-8 text-center flex flex-col items-center">
+            <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mb-4 shadow-sm">
+                <svg class="w-12 h-12 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Inequality Master</h1>
+            <p class="text-gray-600 mb-8">Test your algebra skills! Solve inequalities to earn points. Choose your difficulty to begin.</p>
+            
+            <div class="w-full flex flex-col gap-3">
+                <button onclick="startGame('easy')" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition-colors shadow-md">Easy</button>
+                <button onclick="startGame('medium')" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors shadow-md">Medium</button>
+                <button onclick="startGame('hard')" class="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-lg transition-colors shadow-md">Hard</button>
+            </div>
+        </div>
+
+        <!-- ================= GAME SCREEN ================= -->
+        <div id="game-screen" class="hidden p-6 md:p-8 flex-col">
+            <!-- Header: Score and Progress -->
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+                <div class="text-indigo-600 font-semibold bg-indigo-50 px-3 py-1 rounded-md">
+                    Question <span id="q-number">1</span>/5
+                </div>
+                <div class="text-gray-700 font-bold">
+                    Score: <span id="score-display" class="text-indigo-600 text-xl">0</span>
+                </div>
+            </div>
+
+            <!-- Problem Container -->
+            <div class="text-center mb-8">
+                <p class="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Solve for x</p>
+                <div id="math-problem" class="math-font text-3xl md:text-4xl font-bold text-gray-800 bg-gray-50 py-6 px-4 rounded-xl shadow-inner border border-gray-100">
+                    <!-- Dynamic Problem Goes Here -->
+                </div>
+                <p id="problem-hint" class="text-sm text-indigo-500 mt-3 hidden font-medium"></p>
+            </div>
+
+            <!-- Dynamic Input Container -->
+            <div id="input-container" class="flex flex-col md:flex-row gap-3 justify-center items-center mb-6">
+                <!-- Inputs injected here via JS -->
+            </div>
+            
+            <p id="error-message" class="text-red-500 text-sm text-center mb-4 hidden font-medium">Please fill in all fields.</p>
+
+            <button id="submit-btn" onclick="checkAnswer()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors shadow-md text-lg">
+                Submit Answer
+            </button>
+
+            <!-- Feedback Section (Hidden initially) -->
+            <div id="feedback-section" class="hidden mt-6 p-5 rounded-xl border">
+                <div class="flex items-center gap-3 mb-2">
+                    <div id="feedback-icon"></div>
+                    <h3 id="feedback-title" class="text-xl font-bold"></h3>
+                </div>
+                <p id="feedback-correct-answer" class="text-gray-700 font-medium mb-4 mt-2 bg-white p-3 rounded border border-gray-100 shadow-sm"></p>
+                <button onclick="nextQuestion()" class="w-full py-2.5 bg-gray-800 hover:bg-gray-900 text-white font-semibold rounded-lg transition-colors">
+                    Next Question
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= END SCREEN ================= -->
+        <div id="end-screen" class="hidden p-8 text-center flex flex-col items-center">
+            <div class="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mb-6 shadow-md border-4 border-yellow-50">
+                <svg class="w-12 h-12 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Quiz Complete!</h2>
+            <p class="text-gray-600 mb-6">You've finished the <span id="final-difficulty" class="font-semibold capitalize"></span> mode.</p>
+            
+            <div class="bg-indigo-50 rounded-xl p-6 w-full mb-8 border border-indigo-100">
+                <p class="text-sm text-indigo-600 font-semibold uppercase tracking-wider mb-1">Final Score</p>
+                <div class="text-5xl font-bold text-gray-900"><span id="final-score"></span> <span class="text-2xl text-gray-500">/ 5</span></div>
+            </div>
+
+            <button onclick="resetGame()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors shadow-md text-lg">
+                Play Again
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- State Variables ---
+        let score = 0;
+        let currentQuestion = 1;
+        const totalQuestions = 5;
+        let difficulty = '';
+        let currentProblem = null; 
+
+        // --- DOM Elements ---
+        const screens = {
+            start: document.getElementById('start-screen'),
+            game: document.getElementById('game-screen'),
+            end: document.getElementById('end-screen')
+        };
+        const els = {
+            qNum: document.getElementById('q-number'),
+            scoreDisp: document.getElementById('score-display'),
+            problem: document.getElementById('math-problem'),
+            hint: document.getElementById('problem-hint'),
+            inputContainer: document.getElementById('input-container'),
+            submitBtn: document.getElementById('submit-btn'),
+            feedbackSec: document.getElementById('feedback-section'),
+            feedbackTitle: document.getElementById('feedback-title'),
+            feedbackAns: document.getElementById('feedback-correct-answer'),
+            feedbackIcon: document.getElementById('feedback-icon'),
+            errorMsg: document.getElementById('error-message'),
+            finalScore: document.getElementById('final-score'),
+            finalDiff: document.getElementById('final-difficulty')
+        };
+
+        const signs = ['<', '>', '<=', '>='];
+
+        // --- Utility Functions ---
+        function getRnd(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function getRndSign() {
+            return signs[Math.floor(Math.random() * signs.length)];
+        }
+
+        function flipSign(sign) {
+            const flips = {'<': '>', '>': '<', '<=': '>=', '>=': '<='};
+            return flips[sign] || sign;
+        }
+
+        function switchScreen(screenName) {
+            Object.values(screens).forEach(s => s.classList.add('hidden'));
+            screens[screenName].classList.remove('hidden');
+            screens[screenName].classList.add('fade-in');
+            
+            // Remove animation class after it plays to allow replay
+            setTimeout(() => {
+                screens[screenName].classList.remove('fade-in');
+            }, 400);
+        }
+
+        // --- Game Flow Methods ---
+        function startGame(selectedDifficulty) {
+            difficulty = selectedDifficulty;
+            score = 0;
+            currentQuestion = 1;
+            switchScreen('game');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            els.qNum.innerText = currentQuestion;
+            els.scoreDisp.innerText = score;
+            
+            // Reset UI
+            els.feedbackSec.classList.add('hidden');
+            els.submitBtn.classList.remove('hidden');
+            els.errorMsg.classList.add('hidden');
+            els.hint.classList.add('hidden');
+            els.inputContainer.innerHTML = '';
+            
+            // Generate Problem
+            currentProblem = generateProblemData(difficulty);
+            
+            // Display Problem
+            els.problem.innerHTML = currentProblem.display;
+            if(currentProblem.hint) {
+                els.hint.innerText = currentProblem.hint;
+                els.hint.classList.remove('hidden');
+            }
+
+            // Build Dynamic Inputs
+            buildInputs(currentProblem.inputType);
+        }
+
+        function buildInputs(type) {
+            const selectClass = "px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold text-lg text-center cursor-pointer";
+            const inputClass = "w-24 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold text-lg text-center";
+            
+            let html = '';
+            if (type === 'basic') {
+                html = `
+                    <select id="ans-sign" class="${selectClass}">
+                        <option value="" disabled selected>Sign</option>
+                        <option value="<">&lt;</option>
+                        <option value=">">&gt;</option>
+                        <option value="<=">&le;</option>
+                        <option value=">=">&ge;</option>
+                    </select>
+                    <input type="number" id="ans-val" placeholder="x val" class="${inputClass}" step="any">
+                `;
+            } 
+            else if (type === 'compound') {
+                html = `
+                    <div class="flex items-center gap-2 mb-2 md:mb-0">
+                        <input type="number" id="ans-l-bound" placeholder="Lower" class="${inputClass}" step="any">
+                        <select id="ans-l-sign" class="${selectClass}">
+                            <option value="" disabled selected>Sign</option>
+                            <option value="<">&lt;</option>
+                            <option value="<=">&le;</option>
+                        </select>
+                        <span class="font-bold text-gray-500 mx-1">x</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="ans-u-sign" class="${selectClass}">
+                            <option value="" disabled selected>Sign</option>
+                            <option value="<">&lt;</option>
+                            <option value="<=">&le;</option>
+                        </select>
+                        <input type="number" id="ans-u-bound" placeholder="Upper" class="${inputClass}" step="any">
+                    </div>
+                `;
+            }
+            else if (type === 'absolute') {
+                html = `
+                    <input type="number" id="ans-l-bound" placeholder="Lower bound" class="w-32 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold text-lg text-center" step="any">
+                    <span class="font-bold text-gray-500 mx-2">and</span>
+                    <input type="number" id="ans-u-bound" placeholder="Upper bound" class="w-32 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold text-lg text-center" step="any">
+                `;
+            }
+            els.inputContainer.innerHTML = html;
+        }
+
+        function generateProblemData(diff) {
+            let data = { display: '', hint: '', inputType: '', correctAnswers: {}, answerString: '' };
+            
+            if (diff === 'easy') {
+                let A = getRnd(1, 10);
+                let B = getRnd(1, 20);
+                let X = getRnd(1, 10);
+                let sign = getRndSign();
+                let C = A * X + B;
+                
+                data.display = `${A}x + ${B} ${sign} ${C}`;
+                data.inputType = 'basic';
+                data.correctAnswers = { sign: sign, val: X };
+                data.answerString = `x ${sign} ${X}`;
+            } 
+            else if (diff === 'medium') {
+                let probType = getRnd(1, 2);
+                if (probType === 1) {
+                    // Parentheses: A(x + B) [sign] C
+                    let A = getRnd(1, 10);
+                    let B = getRnd(1, 10);
+                    let X = getRnd(1, 10);
+                    let sign = getRndSign();
+                    let C = A * (X + B);
+                    
+                    data.display = `${A}(x + ${B}) ${sign} ${C}`;
+                    data.inputType = 'basic';
+                    data.correctAnswers = { sign: sign, val: X };
+                    data.answerString = `x ${sign} ${X}`;
+                } else {
+                    // Both sides: Ax + B [sign] Cx + D
+                    let A = getRnd(1, 10);
+                    let B = getRnd(1, 20);
+                    let C = getRnd(1, 10);
+                    while (A === C) C = getRnd(1, 10); // Ensure A != C
+                    let X = getRnd(1, 10);
+                    let sign = getRndSign();
+                    let D = A * X + B - C * X;
+                    
+                    data.display = `${A}x + ${B} ${sign} ${C}x + ${D}`;
+                    data.inputType = 'basic';
+                    
+                    let correctSign = (A > C) ? sign : flipSign(sign);
+                    data.correctAnswers = { sign: correctSign, val: X };
+                    data.answerString = `x ${correctSign} ${X}`;
+                }
+            }
+            else if (diff === 'hard') {
+                let probType = getRnd(1, 2);
+                if (probType === 1) {
+                    // Compound: B < Ax + C <= D
+                    let A = getRnd(1, 10);
+                    let C = getRnd(1, 10);
+                    let X_lower = getRnd(1, 5);
+                    let X_upper = getRnd(6, 10);
+                    let B = A * X_lower + C;
+                    let D = A * X_upper + C;
+                    
+                    data.display = `${B} < ${A}x + ${C} &le; ${D}`;
+                    data.inputType = 'compound';
+                    data.correctAnswers = { 
+                        l_bound: X_lower, 
+                        l_sign: '<', 
+                        u_bound: X_upper, 
+                        u_sign: '<=' 
+                    };
+                    data.answerString = `${X_lower} < x &le; ${X_upper}`;
+                } else {
+                    // Absolute: |x + A| [sign] B
+                    let A = getRnd(1, 10);
+                    let B = getRnd(1, 10);
+                    let sign = getRnd(1, 2) === 1 ? '<' : '>';
+                    
+                    data.display = `|x + ${A}| ${sign} ${B}`;
+                    data.inputType = 'absolute';
+                    
+                    let ans_lower = -B - A;
+                    let ans_upper = B - A;
+                    
+                    data.correctAnswers = { l_bound: ans_lower, u_bound: ans_upper };
+                    
+                    if (sign === '<') {
+                        data.hint = "Hint: Format is 'lower < x < upper'";
+                        data.answerString = `${ans_lower} < x < ${ans_upper}`;
+                    } else {
+                        data.hint = "Hint: Format is 'x < lower OR x > upper'";
+                        data.answerString = `x < ${ans_lower} OR x > ${ans_upper}`;
+                    }
+                }
+            }
+            return data;
+        }
+
+        function checkAnswer() {
+            els.errorMsg.classList.add('hidden');
+            let isCorrect = false;
+            let p = currentProblem;
+            
+            // Gather and validate inputs
+            try {
+                if (p.inputType === 'basic') {
+                    let sign = document.getElementById('ans-sign').value;
+                    let val = document.getElementById('ans-val').value;
+                    if (!sign || val === '') throw new Error('Missing input');
+                    
+                    if (sign === p.correctAnswers.sign && parseFloat(val) === p.correctAnswers.val) {
+                        isCorrect = true;
+                    }
+                } 
+                else if (p.inputType === 'compound') {
+                    let lb = document.getElementById('ans-l-bound').value;
+                    let ls = document.getElementById('ans-l-sign').value;
+                    let ub = document.getElementById('ans-u-bound').value;
+                    let us = document.getElementById('ans-u-sign').value;
+                    if (lb==='' || !ls || ub==='' || !us) throw new Error('Missing input');
+                    
+                    if (parseFloat(lb) === p.correctAnswers.l_bound &&
+                        ls === p.correctAnswers.l_sign &&
+                        parseFloat(ub) === p.correctAnswers.u_bound &&
+                        us === p.correctAnswers.u_sign) {
+                        isCorrect = true;
+                    }
+                }
+                else if (p.inputType === 'absolute') {
+                    let lb = document.getElementById('ans-l-bound').value;
+                    let ub = document.getElementById('ans-u-bound').value;
+                    if (lb==='' || ub==='') throw new Error('Missing input');
+                    
+                    if (parseFloat(lb) === p.correctAnswers.l_bound && 
+                        parseFloat(ub) === p.correctAnswers.u_bound) {
+                        isCorrect = true;
+                    }
+                }
+            } catch (e) {
+                els.errorMsg.classList.remove('hidden');
+                return; // Stop processing, wait for valid input
+            }
+
+            // Apply feedback state
+            els.submitBtn.classList.add('hidden');
+            
+            // Disable inputs
+            const allInputs = els.inputContainer.querySelectorAll('input, select');
+            allInputs.forEach(el => el.disabled = true);
+
+            els.feedbackSec.classList.remove('hidden');
+            els.feedbackSec.className = 'mt-6 p-5 rounded-xl border fade-in '; // reset classes
+
+            if (isCorrect) {
+                score++;
+                els.scoreDisp.innerText = score;
+                els.feedbackSec.classList.add('bg-green-50', 'border-green-200');
+                els.feedbackTitle.innerText = 'Correct!';
+                els.feedbackTitle.className = 'text-xl font-bold text-green-700';
+                els.feedbackIcon.innerHTML = `<svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+            } else {
+                els.feedbackSec.classList.add('bg-red-50', 'border-red-200');
+                els.feedbackTitle.innerText = 'Incorrect';
+                els.feedbackTitle.className = 'text-xl font-bold text-red-700';
+                els.feedbackIcon.innerHTML = `<svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+            }
+            
+            els.feedbackAns.innerHTML = `Correct Answer: <span class="math-font font-bold text-indigo-700">${p.answerString}</span>`;
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < totalQuestions) {
+                currentQuestion++;
+                loadQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            els.finalScore.innerText = score;
+            els.finalDiff.innerText = difficulty;
+            switchScreen('end');
+        }
+
+        function resetGame() {
+            switchScreen('start');
+        }
+    </script>
+</body>
+</html>
